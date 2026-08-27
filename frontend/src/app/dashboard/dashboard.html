@@ -1,0 +1,84 @@
+<div class="page-header">
+  <h1>Dashboard</h1>
+  <p>Overview of AI Work Copilot usage, team velocity impact, and recent generations.</p>
+</div>
+
+<div *ngIf="loading" class="loading-indicator">
+  <div class="spinner"></div>
+  <span>Loading dashboard metrics...</span>
+</div>
+
+<div *ngIf="!loading && stats" class="dashboard-grid">
+  <div class="stat-card">
+    <div class="stat-title">Documents Indexed</div>
+    <div class="stat-value">{{ stats.documentsUploaded }}</div>
+    <div class="stat-desc">Knowledge Base Artifacts</div>
+  </div>
+
+  <div class="stat-card">
+    <div class="stat-title">Requirements Generated</div>
+    <div class="stat-value">{{ stats.requirementsGenerated }}</div>
+  </div>
+
+  <div class="stat-card">
+    <div class="stat-title">Test Cases Generated</div>
+    <div class="stat-value">{{ stats.testCasesGenerated }}</div>
+  </div>
+
+  <div class="stat-card">
+    <div class="stat-title">Defects Triaged</div>
+    <div class="stat-value">{{ stats.defectsTriaged }}</div>
+  </div>
+
+  <div class="stat-card">
+    <div class="stat-title">AI Acceptance Rate</div>
+    <div class="stat-value">{{ stats.acceptanceRate }}%</div>
+    <div class="stat-desc">{{ stats.aiOutputsAccepted + stats.aiOutputsAcceptedWithEdits }} / {{ stats.aiOutputsAccepted + stats.aiOutputsAcceptedWithEdits + stats.aiOutputsRejected }} outputs accepted</div>
+  </div>
+</div>
+
+<div class="card">
+  <h2>Recent AI Activity</h2>
+  <div class="table-container" *ngIf="recentActivity.length > 0; else noActivity">
+    <table>
+      <thead>
+        <tr>
+          <th>Time</th>
+          <th>Feature</th>
+          <th>Model</th>
+          <th>Status</th>
+          <th>Execution Time</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let item of recentActivity">
+          <td style="white-space: nowrap; font-size: 0.85rem;">{{ formatDate(item.timestamp) }}</td>
+          <td><span style="background-color: #f1f5f9; padding: 2px 8px; border-radius: 4px; font-size: 0.85rem; font-weight: 500;">{{ item.feature }}</span></td>
+          <td style="font-size: 0.85rem;">{{ item.model }}</td>
+          <td>
+            <span [ngStyle]="{
+              'color': item.status === 'SUCCESS' ? '#10b981' : '#dc2626',
+              'font-weight': '600',
+              'font-size': '0.875rem'
+            }">{{ item.status }}</span>
+          </td>
+          <td style="font-size: 0.85rem;">{{ item.executionTimeMs }} ms</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <ng-template #noActivity>
+    <p style="color: #64748b; padding: 16px 0;">No AI activity recorded yet. Start by generating requirements or test cases!</p>
+  </ng-template>
+</div>
+
+<div class="card mt-4">
+  <h2>Getting Started</h2>
+  <p style="color: #64748b; line-height: 1.6;">
+    1. Upload your requirements/tech docs/CSV in the <strong><a routerLink="/knowledge-base" style="color: #ea580c; text-decoration: none;">Knowledge Base</a></strong>.<br>
+    2. Convert client specs into structured user stories with the <strong><a routerLink="/requirements" style="color: #ea580c; text-decoration: none;">Requirement Assistant</a></strong>.<br>
+    3. Generate test suites in seconds with the <strong><a routerLink="/test-generator" style="color: #ea580c; text-decoration: none;">Test Generator</a></strong>.<br>
+    4. Triage errors and stack traces using <strong><a routerLink="/defect-triage" style="color: #ea580c; text-decoration: none;">Defect Triage</a></strong>.<br>
+    5. Draft sprint changelogs and daily standup notes in <strong><a routerLink="/release-notes" style="color: #ea580c; text-decoration: none;">Release Notes</a></strong>.
+  </p>
+</div>

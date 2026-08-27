@@ -1,0 +1,113 @@
+.app-container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+  background-color: #f8fafc;
+}
+
+/* Top Header Bar */
+.top-header {
+  height: 42px;
+  background: linear-gradient(90deg, #F36F21 0%, #E05600 100%);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+  font-size: 0.875rem;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  z-index: 100;
+
+  .top-left {
+    display: flex;
+    align-items: center;
+
+    .app-subtitle {
+      font-weight: 600;
+      letter-spacing: 0.3px;
+    }
+  }
+}
+
+.app-layout {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+.sidebar {
+  width: 240px;
+  background-color: #ffffff;
+  border-right: 1px solid #e2e8f0;
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebar-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid #e2e8f0;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  background-color: #ffffff;
+
+  .brand-logo {
+    height: 38px;
+    max-width: 150px;
+    object-fit: contain;
+  }
+}
+
+.sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  padding: 12px 0;
+  overflow-y: auto;
+
+  a {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 20px;
+    text-decoration: none;
+    color: #475569;
+    font-weight: 500;
+    font-size: 0.925rem;
+    transition: all 0.2s ease;
+    border-left: 4px solid transparent;
+
+    svg {
+      color: #64748b;
+      transition: color 0.2s;
+    }
+
+    &:hover {
+      background-color: #f8fafc;
+      color: #0f172a;
+
+      svg {
+        color: #F36F21;
+      }
+    }
+
+    &.active-link {
+      background-color: #FFF3EB;
+      color: #F36F21;
+      border-left-color: #F36F21;
+      font-weight: 600;
+
+      svg {
+        color: #F36F21;
+      }
+    }
+  }
+}
+
+.main-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 28px 36px;
+  background-color: #f8fafc;
+}

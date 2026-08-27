@@ -1,0 +1,94 @@
+<div class="page-header">
+  <h1>Release Notes Generator</h1>
+  <p>Generate professional release notes from sprint tickets and PRs.</p>
+</div>
+
+<div class="card">
+  <div class="form-group">
+    <label>Version Number</label>
+    <input type="text" [(ngModel)]="version" placeholder="e.g. v1.4.0">
+  </div>
+  
+  <div class="form-group">
+    <label>Sprint Information / Jira Export</label>
+    <textarea [(ngModel)]="sprintInformation" style="min-height: 150px;" placeholder="Paste sprint ticket titles, PR descriptions, or commit messages..."></textarea>
+  </div>
+  
+  <button class="btn btn-primary" (click)="generate()" [disabled]="loading || !version || !sprintInformation">
+    {{ loading ? 'Generating...' : 'Generate Release Notes' }}
+  </button>
+  
+  <div *ngIf="loading" class="loading-indicator">
+    <div class="spinner"></div>
+    <span>Categorizing and generating release notes...</span>
+  </div>
+  
+  <div *ngIf="error" class="error-message">
+    {{ error }}
+  </div>
+</div>
+
+<div class="card" *ngIf="!loading && !result && !error">
+  <div style="text-align: center; color: #64748b; padding: 40px 0;">
+    Enter sprint information to generate release notes.
+  </div>
+</div>
+
+<div class="card" *ngIf="result">
+  <div style="border-bottom: 1px solid #e2e8f0; padding-bottom: 16px; margin-bottom: 20px;">
+    <h2 style="margin: 0 0 8px 0; color: #0f172a;">Release Notes: {{ result.version }}</h2>
+    <p style="margin: 0; color: #64748b;">{{ result.summary }}</p>
+  </div>
+  
+  <div>
+    <div *ngIf="result.newFeatures?.length">
+      <h3 style="color: #10b981; margin-bottom: 8px;">🚀 New Features</h3>
+      <ul>
+        <li *ngFor="let item of result.newFeatures">{{ item }}</li>
+      </ul>
+    </div>
+    
+    <div *ngIf="result.improvements?.length">
+      <h3 style="color: #3b82f6; margin-bottom: 8px;">✨ Improvements</h3>
+      <ul>
+        <li *ngFor="let item of result.improvements">{{ item }}</li>
+      </ul>
+    </div>
+    
+    <div *ngIf="result.bugFixes?.length">
+      <h3 style="color: #ea580c; margin-bottom: 8px;">🐛 Bug Fixes</h3>
+      <ul>
+        <li *ngFor="let item of result.bugFixes">{{ item }}</li>
+      </ul>
+    </div>
+    
+    <div *ngIf="result.breakingChanges?.length">
+      <h3 style="color: #dc2626; margin-bottom: 8px;">⚠️ Breaking Changes</h3>
+      <ul>
+        <li *ngFor="let item of result.breakingChanges">{{ item }}</li>
+      </ul>
+    </div>
+    
+    <div *ngIf="result.knownIssues?.length">
+      <h3 style="color: #8b5cf6; margin-bottom: 8px;">📋 Known Issues</h3>
+      <ul>
+        <li *ngFor="let item of result.knownIssues">{{ item }}</li>
+      </ul>
+    </div>
+    
+    <div *ngIf="result.technicalNotes">
+      <h3 style="margin-bottom: 8px;">🔧 Technical Notes</h3>
+      <p>{{ result.technicalNotes }}</p>
+    </div>
+  </div>
+  
+  <div class="action-bar">
+    <button class="btn btn-secondary" (click)="copy()">Copy Notes</button>
+    <div style="flex: 1;"></div>
+    <ng-container *ngIf="!feedbackGiven">
+      <button class="btn btn-outline" (click)="submitFeedback('ACCEPT')">Accept</button>
+      <button class="btn btn-outline" (click)="submitFeedback('ACCEPT_WITH_EDITS')">Accept with Edits</button>
+    </ng-container>
+    <span *ngIf="feedbackGiven" style="color: #10b981; align-self: center; font-weight: 500;">Feedback Saved ✓</span>
+  </div>
+</div>

@@ -1,0 +1,207 @@
+/* Newgen Brand Theme & Global Styles */
+:root {
+  --newgen-orange: #F36F21;
+  --newgen-orange-dark: #D8550B;
+  --newgen-orange-light: #FFF3EB;
+  --newgen-orange-border: #FDCB9E;
+  --text-primary: #1E293B;
+  --text-secondary: #64748B;
+  --bg-page: #F8FAFC;
+  --border-color: #E2E8F0;
+}
+
+body, html {
+  margin: 0;
+  padding: 0;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  background-color: var(--bg-page);
+  color: var(--text-primary);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+/* Common Card Style matching Newgen Portal cards */
+.card {
+  background: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.02);
+  padding: 24px;
+  margin-bottom: 24px;
+  border: 1px solid var(--border-color);
+  border-top: 3px solid var(--newgen-orange);
+}
+
+.page-header {
+  margin-bottom: 28px;
+  
+  h1 {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0 0 6px 0;
+  }
+  
+  p {
+    color: var(--text-secondary);
+    margin: 0;
+    font-size: 0.95rem;
+  }
+}
+
+/* Form Styles */
+.form-group {
+  margin-bottom: 20px;
+  
+  label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: var(--text-primary);
+  }
+  
+  input[type="text"],
+  select,
+  textarea {
+    width: 100%;
+    padding: 10px 14px;
+    border: 1px solid #CBD5E1;
+    border-radius: 6px;
+    font-family: inherit;
+    font-size: 0.95rem;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    background-color: #ffffff;
+    
+    &:focus {
+      outline: none;
+      border-color: var(--newgen-orange);
+      box-shadow: 0 0 0 3px rgba(243, 111, 33, 0.15);
+    }
+  }
+  
+  textarea {
+    resize: vertical;
+    min-height: 120px;
+  }
+}
+
+/* Button Styles */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  justify-content: center;
+  padding: 10px 22px;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s ease;
+  font-size: 0.925rem;
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
+.btn-primary {
+  background-color: var(--newgen-orange);
+  color: #ffffff;
+  box-shadow: 0 2px 4px rgba(243, 111, 33, 0.25);
+  
+  &:hover:not(:disabled) {
+    background-color: var(--newgen-orange-dark);
+  }
+}
+
+.btn-secondary {
+  background-color: #F1F5F9;
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  
+  &:hover:not(:disabled) {
+    background-color: #E2E8F0;
+  }
+}
+
+.btn-outline {
+  background-color: transparent;
+  color: var(--newgen-orange);
+  border: 1.5px solid var(--newgen-orange);
+  
+  &:hover:not(:disabled) {
+    background-color: var(--newgen-orange-light);
+  }
+}
+
+.action-bar {
+  display: flex;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+/* Table Styles */
+.table-container {
+  width: 100%;
+  overflow-x: auto;
+  
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    
+    th, td {
+      padding: 12px 16px;
+      text-align: left;
+      border-bottom: 1px solid var(--border-color);
+    }
+    
+    th {
+      background-color: #F8FAFC;
+      font-weight: 600;
+      color: #475569;
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    
+    tbody tr:hover {
+      background-color: #F1F5F9;
+    }
+  }
+}
+
+/* Loading State */
+.loading-indicator {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--newgen-orange);
+  font-weight: 600;
+  margin-top: 16px;
+  
+  .spinner {
+    width: 20px;
+    height: 20px;
+    border: 3px solid rgba(243, 111, 33, 0.2);
+    border-radius: 50%;
+    border-top-color: var(--newgen-orange);
+    animation: spin 1s ease-in-out infinite;
+  }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Error State */
+.error-message {
+  padding: 12px 16px;
+  background-color: #FEF2F2;
+  border: 1px solid #FECACA;
+  color: #DC2626;
+  border-radius: 6px;
+  margin-bottom: 16px;
+}

@@ -1,0 +1,10 @@
+CREATE TABLE generation (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    feature VARCHAR(100) NOT NULL,
+    prompt_version VARCHAR(50),
+    model_used VARCHAR(100),
+    status VARCHAR(50),
+    execution_time_ms BIGINT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);

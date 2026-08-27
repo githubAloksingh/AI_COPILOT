@@ -1,0 +1,64 @@
+<div class="page-header">
+  <h1>Knowledge Base</h1>
+  <p>Upload project documents (PRDs, tech specs, API docs) to feed the AI's RAG context.</p>
+</div>
+
+<div class="card">
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+    <h2 style="margin: 0; font-size: 1.25rem;">Uploaded Documents</h2>
+    
+    <div>
+      <input type="file" id="fileUpload" style="display: none;" (change)="onFileSelected($event)" accept=".pdf,.txt,.docx,.csv,.md,.json">
+      <label for="fileUpload" class="btn btn-primary" style="cursor: pointer;" [class.disabled]="uploading">
+        {{ uploading ? 'Uploading...' : 'Upload Document' }}
+      </label>
+    </div>
+  </div>
+  
+  <div *ngIf="error" class="error-message">
+    {{ error }}
+  </div>
+
+  <div *ngIf="loading" class="loading-indicator">
+    <div class="spinner"></div>
+    <span>Loading documents...</span>
+  </div>
+
+  <div class="table-container" *ngIf="!loading">
+    <table *ngIf="documents.length > 0; else noDocs">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>File Name</th>
+          <th>Type</th>
+          <th>Size</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let doc of documents">
+          <td>{{ doc.id }}</td>
+          <td style="font-weight: 500;">{{ doc.fileName }}</td>
+          <td>{{ doc.fileType }}</td>
+          <td>{{ formatBytes(doc.fileSize) }}</td>
+          <td>
+            <span [ngStyle]="{
+              'color': doc.status === 'COMPLETED' ? '#10b981' : (doc.status === 'FAILED' ? '#ef4444' : '#f59e0b'),
+              'font-weight': '600',
+              'font-size': '0.875rem'
+            }">{{ doc.status }}</span>
+          </td>
+          <td>
+            <button class="btn btn-outline" style="padding: 6px 12px; font-size: 0.85rem;" (click)="deleteDocument(doc.id)">Delete</button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <ng-template #noDocs>
+      <div style="text-align: center; padding: 40px; color: #64748b;">
+        No documents found. Upload a document to build the knowledge base.
+      </div>
+    </ng-template>
+  </div>
+</div>

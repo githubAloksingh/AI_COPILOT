@@ -1,0 +1,219 @@
+<div class="page-header">
+  <h1>Audit & History</h1>
+  <p>Track all AI interactions, generations, and context usage for compliance.</p>
+</div>
+
+<div class="card">
+  <div *ngIf="loading" class="loading-indicator">
+    <div class="spinner"></div>
+    <span>Loading audit logs...</span>
+  </div>
+
+  <div class="table-container" *ngIf="!loading">
+    <table *ngIf="logs.length > 0; else noLogs">
+      <thead>
+        <tr>
+          <th>Time</th>
+          <th>Feature</th>
+          <th>Status</th>
+          <th>Model</th>
+          <th>Exec Time</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        <ng-container *ngFor="let log of logs">
+          <tr>
+            <td style="white-space: nowrap; font-size: 0.85rem;">{{ formatDate(log.timestamp) }}</td>
+            <td>
+              <span class="feature-badge">{{ log.feature }}</span>
+            </td>
+            <td>
+              <span class="status-badge" [class.status-success]="log.status === 'SUCCESS'" [class.status-failed]="log.status !== 'SUCCESS'">
+                {{ log.status }}
+              </span>
+            </td>
+            <td style="font-size: 0.85rem;">{{ log.model }}</td>
+            <td style="font-size: 0.85rem;">{{ log.executionTimeMs }} ms</td>
+            <td>
+              <button class="btn btn-outline" style="padding: 4px 12px; font-size: 0.825rem;" (click)="toggleExpand(log)">
+                {{ log.expanded ? 'Close' : 'View Output' }}
+              </button>
+            </td>
+          </tr>
+
+          <!-- Expanded Detail View -->
+          <tr *ngIf="log.expanded">
+            <td colspan="6" class="expanded-row-container">
+              <div class="audit-details-card">
+                
+                <!-- Input Section -->
+                <div class="detail-section">
+                  <div class="section-label">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                    </svg>
+                    Input Prompt / Context
+                  </div>
+                  <div class="input-box">{{ log.input }}</div>
+                </div>
+
+                <!-- Retrieved Context Sources -->
+                <div class="detail-section" *ngIf="log.retrievedSources && log.retrievedSources.length > 0">
+                  <div class="section-label">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                    </svg>
+                    Retrieved Knowledge Sources ({{ log.retrievedSources.length }})
+                  </div>
+                  <div class="sources-list">
+                    <div class="source-item" *ngFor="let src of log.retrievedSources; let i = index">
+                      <span class="src-index">#{{ i + 1 }}</span> {{ src | slice:0:150 }}...
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Structured Output Section -->
+                <div class="detail-section">
+                  <div class="section-label output-label">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <polyline points="9 11 12 14 22 4"/>
+                      <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+                    </svg>
+                    Generated AI Result
+                  </div>
+
+                  <!-- Error View -->
+                  <div *ngIf="log.status !== 'SUCCESS'" class="error-message" style="margin-top: 8px;">
+                    {{ log.errorMessage || 'Execution failed.' }}
+                  </div>
+
+                  <!-- Structured Result View -->
+                  <div *ngIf="log.status === 'SUCCESS' && log.parsedOutput" class="parsed-result-card">
+                    
+                    <!-- Requirement View -->
+                    <div *ngIf="log.parsedOutput.summary || log.parsedOutput.userStory">
+                      <div class="result-block" *ngIf="log.parsedOutput.summary">
+                        <h4>Summary</h4>
+                        <p>{{ log.parsedOutput.summary }}</p>
+                      </div>
+
+                      <div class="result-block" *ngIf="log.parsedOutput.userStory">
+                        <h4>User Story</h4>
+                        <div class="user-story-badge">{{ log.parsedOutput.userStory }}</div>
+                      </div>
+
+                      <div class="result-block" *ngIf="log.parsedOutput.acceptanceCriteria?.length">
+                        <h4>Acceptance Criteria</h4>
+                        <ul class="criteria-list">
+                          <li *ngFor="let item of log.parsedOutput.acceptanceCriteria">
+                            <span class="check-icon">✓</span> {{ item }}
+                          </li>
+                        </ul>
+                      </div>
+
+                      <div class="result-grid" *ngIf="log.parsedOutput.edgeCases?.length || log.parsedOutput.assumptions?.length">
+                        <div *ngIf="log.parsedOutput.edgeCases?.length">
+                          <h4>Edge Cases</h4>
+                          <ul class="simple-list">
+                            <li *ngFor="let item of log.parsedOutput.edgeCases">{{ item }}</li>
+                          </ul>
+                        </div>
+                        <div *ngIf="log.parsedOutput.assumptions?.length">
+                          <h4>Assumptions</h4>
+                          <ul class="simple-list">
+                            <li *ngFor="let item of log.parsedOutput.assumptions">{{ item }}</li>
+                          </ul>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Array Output (Test Cases) -->
+                    <div *ngIf="log.isArrayOutput">
+                      <h4>Generated Test Cases ({{ log.parsedOutput.length }})</h4>
+                      <div class="inner-table-container">
+                        <table class="inner-table">
+                          <thead>
+                            <tr>
+                              <th>TC ID</th>
+                              <th>Scenario</th>
+                              <th>Type</th>
+                              <th>Priority</th>
+                              <th>Expected Result</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            <tr *ngFor="let item of log.parsedOutput">
+                              <td><strong>{{ item.tcId || 'TC' }}</strong></td>
+                              <td>{{ item.scenario }}</td>
+                              <td>
+                                <span class="tag-pill">{{ item.type }}</span>
+                              </td>
+                              <td>{{ item.priority }}</td>
+                              <td>{{ item.expectedResult }}</td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+
+                    <!-- Defect Triage View -->
+                    <div *ngIf="log.parsedOutput.probableRootCause || log.parsedOutput.suggestedFix">
+                      <div class="triage-alert-box" *ngIf="log.parsedOutput.probableRootCause">
+                        <h4>Probable Root Cause</h4>
+                        <p>{{ log.parsedOutput.probableRootCause }}</p>
+                      </div>
+
+                      <div class="triage-success-box" *ngIf="log.parsedOutput.suggestedFix">
+                        <h4>Suggested Fix</h4>
+                        <pre class="code-preview">{{ log.parsedOutput.suggestedFix }}</pre>
+                      </div>
+
+                      <div class="result-block" *ngIf="log.parsedOutput.evidence">
+                        <h4>Evidence & Stack Trace Analysis</h4>
+                        <p>{{ log.parsedOutput.evidence }}</p>
+                      </div>
+                    </div>
+
+                    <!-- Release Notes View -->
+                    <div *ngIf="log.parsedOutput.highlights || log.parsedOutput.newFeatures">
+                      <div class="result-block" *ngIf="log.parsedOutput.version">
+                        <span class="version-badge">Version {{ log.parsedOutput.version }}</span>
+                      </div>
+                      <div class="result-block" *ngIf="log.parsedOutput.highlights?.length">
+                        <h4>Highlights</h4>
+                        <ul class="criteria-list">
+                          <li *ngFor="let h of log.parsedOutput.highlights">{{ h }}</li>
+                        </ul>
+                      </div>
+                      <div class="result-block" *ngIf="log.parsedOutput.newFeatures?.length">
+                        <h4>New Features</h4>
+                        <ul class="criteria-list">
+                          <li *ngFor="let f of log.parsedOutput.newFeatures">{{ f }}</li>
+                        </ul>
+                      </div>
+                    </div>
+
+                  </div>
+
+                  <!-- Fallback Raw Output View -->
+                  <div *ngIf="log.status === 'SUCCESS' && !log.parsedOutput" class="raw-output-box">
+                    <pre>{{ log.output }}</pre>
+                  </div>
+
+                </div>
+
+              </div>
+            </td>
+          </tr>
+        </ng-container>
+      </tbody>
+    </table>
+
+    <ng-template #noLogs>
+      <div style="text-align: center; padding: 40px; color: #64748b;">
+        No audit logs found.
+      </div>
+    </ng-template>
+  </div>
+</div>

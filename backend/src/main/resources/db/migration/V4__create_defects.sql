@@ -1,0 +1,21 @@
+CREATE TABLE defect (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    title VARCHAR(255) NOT NULL,
+    description TEXT,
+    logs TEXT,
+    environment VARCHAR(255),
+    steps_to_reproduce TEXT,
+    expected_behavior TEXT,
+    actual_behavior TEXT,
+    severity VARCHAR(50),
+    priority VARCHAR(50),
+    probable_root_cause TEXT,
+    evidence TEXT,
+    suggested_investigation TEXT,
+    suggested_fix TEXT,
+    confidence VARCHAR(50),
+    related_defects JSON,
+    sources JSON,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
