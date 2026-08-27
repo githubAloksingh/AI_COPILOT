@@ -8,7 +8,7 @@ AI Work Copilot is an end-to-end Generative AI & RAG assistant tailored for soft
 
 - **Backend**: Java 17, Spring Boot 3.3.4, Spring Data JPA, Flyway (MySQL 8.4)
 - **Vector DB / RAG**: Chroma (No Docker required), Local Embedding / Google GenAI Embedding (`text-embedding-004`)
-- **AI Model**: Google Gemini 3.7 Flash (`gemini-3.7-flash`)
+- **AI Model**: Google Gemini 2.5 Flash Lite (`gemini-2.5-flash-lite`)
 - **Frontend**: Angular 22+, Standalone Components, SCSS, HttpClient, TypeScript
 - **Parsing**: Apache PDFBox 3, Apache POI (DOCX), OpenCSV (CSV), Jackson (JSON), UTF-8 Stream Parser (TXT/MD)
 
@@ -54,7 +54,7 @@ export DATABASE_URL=jdbc:mysql://localhost:3306/ai_work_copilot?createDatabaseIf
 export DATABASE_USERNAME=root
 export DATABASE_PASSWORD=your_mysql_password_here
 export GEMINI_API_KEY=your_actual_gemini_api_key_here
-export GEMINI_MODEL=gemini-3.7-flash
+export GEMINI_MODEL=gemini-2.5-flash-lite
 export CHROMA_URL=http://localhost:8000
 ```
 

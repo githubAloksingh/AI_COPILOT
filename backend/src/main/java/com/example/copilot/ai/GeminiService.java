@@ -19,7 +19,7 @@ public class GeminiService {
     @Value("${GEMINI_API_KEY:}")
     private String apiKey;
 
-    @Value("${GEMINI_MODEL:gemini-3.7-flash}")
+    @Value("${GEMINI_MODEL:gemini-2.5-flash-lite}")
     private String model;
 
     private final RestTemplate restTemplate;
@@ -29,6 +29,10 @@ public class GeminiService {
         factory.setConnectTimeout(10000);
         factory.setReadTimeout(90000);
         this.restTemplate = new RestTemplate(factory);
+    }
+
+    public String getModelName() {
+        return model != null && !model.isBlank() ? model : "gemini-2.5-flash-lite";
     }
 
     public String generateContent(String promptText) {
@@ -53,12 +57,12 @@ public class GeminiService {
         HttpEntity<Map<String, Object>> request = new HttpEntity<>(requestBody, headers);
 
         List<String> modelsToTry = List.of(
-            model != null && !model.isBlank() ? model : "gemini-2.5-flash",
+            model != null && !model.isBlank() ? model : "gemini-2.5-flash-lite",
+            "gemini-2.5-flash-lite",
+            "gemini-2.0-flash-lite",
             "gemini-2.5-flash",
             "gemini-2.0-flash",
-            "gemini-1.5-flash",
-            "gemini-3.7-flash",
-            "gemini-flash-latest"
+            "gemini-1.5-flash"
         );
 
         Exception lastException = null;

@@ -59,14 +59,14 @@ public class RequirementService {
 
             Requirement saved = requirementRepository.save(requirement);
             
-            auditService.logAudit(feature, request.getDescription(), sources, "gemini-3.7-flash", "requirement-v1", aiResponse, status, System.currentTimeMillis() - startTime, null);
+            auditService.logAudit(feature, request.getDescription(), sources, "gemini-2.5-flash-lite", "requirement-v1", aiResponse, status, System.currentTimeMillis() - startTime, null);
             return saved;
             
         } catch (Exception e) {
             status = "FAILED";
             errorMsg = e.getMessage();
             log.error("Error generating requirement: ", e);
-            auditService.logAudit(feature, request.getDescription(), sources, "gemini-3.7-flash", "requirement-v1", null, status, System.currentTimeMillis() - startTime, errorMsg);
+            auditService.logAudit(feature, request.getDescription(), sources, "gemini-2.5-flash-lite", "requirement-v1", null, status, System.currentTimeMillis() - startTime, errorMsg);
             throw new RuntimeException("Failed to generate requirement", e);
         }
     }

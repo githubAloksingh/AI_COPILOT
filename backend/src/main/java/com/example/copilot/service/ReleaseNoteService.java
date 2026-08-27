@@ -50,14 +50,14 @@ public class ReleaseNoteService {
 
             ReleaseNote saved = releaseNoteRepository.save(releaseNote);
             
-            auditService.logAudit(feature, request.getSprintInformation(), null, "gemini-3.7-flash", "release-v1", aiResponse, status, System.currentTimeMillis() - startTime, null);
+            auditService.logAudit(feature, request.getSprintInformation(), null, "gemini-2.5-flash-lite", "release-v1", aiResponse, status, System.currentTimeMillis() - startTime, null);
             return saved;
             
         } catch (Exception e) {
             status = "FAILED";
             errorMsg = e.getMessage();
             log.error("Error generating release notes: ", e);
-            auditService.logAudit(feature, request.getSprintInformation(), null, "gemini-3.7-flash", "release-v1", null, status, System.currentTimeMillis() - startTime, errorMsg);
+            auditService.logAudit(feature, request.getSprintInformation(), null, "gemini-2.5-flash-lite", "release-v1", null, status, System.currentTimeMillis() - startTime, errorMsg);
             throw new RuntimeException("Failed to generate release notes", e);
         }
     }
