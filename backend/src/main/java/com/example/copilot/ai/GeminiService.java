@@ -26,8 +26,8 @@ public class GeminiService {
 
     public GeminiService() {
         SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
-        factory.setConnectTimeout(5000);
-        factory.setReadTimeout(30000);
+        factory.setConnectTimeout(10000);
+        factory.setReadTimeout(90000);
         this.restTemplate = new RestTemplate(factory);
     }
 
@@ -53,7 +53,10 @@ public class GeminiService {
         HttpEntity<Map<String, Object>> request = new HttpEntity<>(requestBody, headers);
 
         List<String> modelsToTry = List.of(
-            model != null && !model.isBlank() ? model : "gemini-3.7-flash",
+            model != null && !model.isBlank() ? model : "gemini-2.5-flash",
+            "gemini-2.5-flash",
+            "gemini-2.0-flash",
+            "gemini-1.5-flash",
             "gemini-3.7-flash",
             "gemini-flash-latest"
         );
