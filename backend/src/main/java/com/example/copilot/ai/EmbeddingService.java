@@ -30,8 +30,8 @@ public class EmbeddingService {
 
     public EmbeddingService() {
         SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
-        factory.setConnectTimeout(5000);
-        factory.setReadTimeout(10000);
+        factory.setConnectTimeout(10000);
+        factory.setReadTimeout(25000);
         this.restTemplate = new RestTemplate(factory);
     }
 

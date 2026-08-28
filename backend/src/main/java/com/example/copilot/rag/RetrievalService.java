@@ -17,7 +17,7 @@ import java.util.*;
 @Service
 public class RetrievalService {
 
-    @Value("${copilot.chroma.url:http://localhost:8000}")
+    @Value("${copilot.chroma.url:https://ai-copilot-chroma.onrender.com}")
     private String chromaUrl;
 
     @Value("${copilot.chroma.collection-name:ai_work_copilot}")
@@ -34,14 +34,18 @@ public class RetrievalService {
     public RetrievalService(EmbeddingService embeddingService) {
         this.embeddingService = embeddingService;
         SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
-        factory.setConnectTimeout(3000);
-        factory.setReadTimeout(5000);
+        factory.setConnectTimeout(20000);
+        factory.setReadTimeout(45000);
         this.restTemplate = new RestTemplate(factory);
     }
 
     @PostConstruct
     public void init() {
-        ensureCollection();
+        try {
+            ensureCollection();
+        } catch (Exception e) {
+            log.warn("Chroma not reachable at startup — will retry lazily on request. Error: {}", e.getMessage());
+        }
     }
 
     public synchronized void ensureCollection() {
@@ -52,15 +56,17 @@ public class RetrievalService {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
 
-        // Candidate URLs to try
-        List<String> candidateUrls = List.of(
-            "http://[::1]:8000",
-            "http://127.0.0.1:8000",
-            chromaUrl
-        );
+        // Prioritize configured chromaUrl first (for cloud Render / custom host), followed by local fallbacks
+        List<String> candidateUrls = new ArrayList<>();
+        if (chromaUrl != null && !chromaUrl.isBlank()) {
+            candidateUrls.add(chromaUrl.trim());
+        }
+        candidateUrls.add("http://localhost:8000");
+        candidateUrls.add("http://127.0.0.1:8000");
+        candidateUrls.add("http://[::1]:8000");
         
         for (String targetUrl : candidateUrls) {
-            // Try v2 collections API
+            // Try v2 collections API (standard for Chroma 0.5+)
             try {
                 String v2Url = targetUrl + "/api/v2/tenants/default_tenant/databases/default_database/collections";
                 Map<String, Object> body = Map.of("name", collectionName, "get_or_create", true);
@@ -75,7 +81,7 @@ public class RetrievalService {
                 }
             } catch (Exception ignored) {}
 
-            // Try v1 collections API
+            // Try v1 collections API (fallback for older Chroma)
             try {
                 String v1Url = targetUrl + "/api/v1/collections";
                 Map<String, Object> body = Map.of("name", collectionName, "get_or_create", true);
@@ -91,7 +97,7 @@ public class RetrievalService {
             } catch (Exception ignored) {}
         }
 
-        log.warn("Chroma collection could not be initialized (is Chroma running on port 8000?)");
+        log.warn("Chroma collection could not be initialized at any candidate URL.");
     }
 
     public void storeChunks(Long documentId, String fileName, List<String> chunks) {
@@ -129,6 +135,8 @@ public class RetrievalService {
             log.info("Stored {} chunks for document {} in Chroma", chunks.size(), documentId);
         } catch (Exception e) {
             log.error("Failed to store chunks in Chroma: {}", e.getMessage());
+            this.collectionId = null;
+            this.baseCollectionUrl = null;
             throw new RuntimeException("Chroma storage failed", e);
         }
     }
@@ -162,6 +170,8 @@ public class RetrievalService {
             }
         } catch (Exception e) {
             log.error("Failed to query Chroma: {}", e.getMessage());
+            this.collectionId = null;
+            this.baseCollectionUrl = null;
         }
         
         return Collections.emptyList();
