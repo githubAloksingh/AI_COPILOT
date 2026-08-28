@@ -66,14 +66,14 @@ public class DefectService {
 
             Defect saved = defectRepository.save(defect);
             
-            auditService.logAudit(feature, combinedInput, sources, "gemini-2.5-flash-lite", "defect-v1", aiResponse, status, System.currentTimeMillis() - startTime, null);
+            auditService.logAudit(feature, combinedInput, sources, "gemini-3.7-flash", "defect-v1", aiResponse, status, System.currentTimeMillis() - startTime, null);
             return saved;
             
         } catch (Exception e) {
             status = "FAILED";
             errorMsg = e.getMessage();
             log.error("Error triaging defect: ", e);
-            auditService.logAudit(feature, request.getTitle(), sources, "gemini-2.5-flash-lite", "defect-v1", null, status, System.currentTimeMillis() - startTime, errorMsg);
+            auditService.logAudit(feature, request.getTitle(), sources, "gemini-3.7-flash", "defect-v1", null, status, System.currentTimeMillis() - startTime, errorMsg);
             throw new RuntimeException("Failed to analyze defect", e);
         }
     }

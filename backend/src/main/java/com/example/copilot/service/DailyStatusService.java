@@ -46,14 +46,14 @@ public class DailyStatusService {
 
             DailyStatus saved = dailyStatusRepository.save(dailyStatus);
             
-            auditService.logAudit(feature, request.getSprintInformation(), null, "gemini-2.5-flash-lite", "status-v1", aiResponse, status, System.currentTimeMillis() - startTime, null);
+            auditService.logAudit(feature, request.getSprintInformation(), null, "gemini-3.7-flash", "status-v1", aiResponse, status, System.currentTimeMillis() - startTime, null);
             return saved;
             
         } catch (Exception e) {
             status = "FAILED";
             errorMsg = e.getMessage();
             log.error("Error generating daily status: ", e);
-            auditService.logAudit(feature, request.getSprintInformation(), null, "gemini-2.5-flash-lite", "status-v1", null, status, System.currentTimeMillis() - startTime, errorMsg);
+            auditService.logAudit(feature, request.getSprintInformation(), null, "gemini-3.7-flash", "status-v1", null, status, System.currentTimeMillis() - startTime, errorMsg);
             throw new RuntimeException("Failed to generate daily status", e);
         }
     }

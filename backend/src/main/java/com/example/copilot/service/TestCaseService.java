@@ -62,14 +62,14 @@ public class TestCaseService {
                 savedTestCases.add(testCaseRepository.save(tc));
             }
             
-            auditService.logAudit(feature, request.getRequirement(), sources, "gemini-2.5-flash-lite", "testcase-v1", aiResponse, status, System.currentTimeMillis() - startTime, null);
+            auditService.logAudit(feature, request.getRequirement(), sources, "gemini-3.7-flash", "testcase-v1", aiResponse, status, System.currentTimeMillis() - startTime, null);
             return savedTestCases;
             
         } catch (Exception e) {
             status = "FAILED";
             errorMsg = e.getMessage();
             log.error("Error generating test cases: ", e);
-            auditService.logAudit(feature, request.getRequirement(), sources, "gemini-2.5-flash-lite", "testcase-v1", null, status, System.currentTimeMillis() - startTime, errorMsg);
+            auditService.logAudit(feature, request.getRequirement(), sources, "gemini-3.7-flash", "testcase-v1", null, status, System.currentTimeMillis() - startTime, errorMsg);
             throw new RuntimeException("Failed to generate test cases", e);
         }
     }
