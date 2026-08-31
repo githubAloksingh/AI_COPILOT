@@ -25,14 +25,17 @@ public class DocumentController {
 
     @PostMapping
     public ApiResponse<Document> uploadDocument(@RequestParam("file") MultipartFile file) {
+        if (file == null || file.isEmpty()) {
+            throw new RuntimeException("Uploaded file cannot be empty");
+        }
         Document doc = ingestionService.uploadDocument(file);
         try {
-            // Process immediately in this simple version
-            ingestionService.processDocument(doc, file.getInputStream(), file.getContentType());
+            byte[] fileBytes = file.getBytes();
+            ingestionService.processDocumentAsync(doc.getId(), fileBytes, file.getOriginalFilename(), file.getContentType());
         } catch (Exception e) {
-            throw new RuntimeException("Error processing document", e);
+            throw new RuntimeException("Failed to start document processing: " + e.getMessage(), e);
         }
-        return ApiResponse.success(doc, "Document uploaded and processing started");
+        return ApiResponse.success(doc, "Document uploaded successfully. Ingestion in progress.");
     }
 
     @DeleteMapping("/{id}")

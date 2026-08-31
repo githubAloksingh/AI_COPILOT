@@ -107,37 +107,49 @@ public class RetrievalService {
             return;
         }
 
-        List<List<Double>> embeddings = new ArrayList<>();
-        List<String> ids = new ArrayList<>();
-        List<Map<String, Object>> metadatas = new ArrayList<>();
-        
-        for (int i = 0; i < chunks.size(); i++) {
-            String chunk = chunks.get(i);
-            embeddings.add(embeddingService.embedText(chunk));
-            ids.add("doc_" + documentId + "_chunk_" + i);
-            metadatas.add(Map.of("documentId", documentId, "fileName", fileName, "chunkIndex", i));
+        if (chunks == null || chunks.isEmpty()) {
+            return;
         }
 
+        int batchSize = 50; // Store in batches of 50 chunks for memory safety and Chroma limits
         String url = baseCollectionUrl + "/add";
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
-        
-        Map<String, Object> body = Map.of(
-            "ids", ids,
-            "embeddings", embeddings,
-            "metadatas", metadatas,
-            "documents", chunks
-        );
-        
-        HttpEntity<Map<String, Object>> request = new HttpEntity<>(body, headers);
-        try {
-            restTemplate.postForObject(url, request, Map.class);
-            log.info("Stored {} chunks for document {} in Chroma", chunks.size(), documentId);
-        } catch (Exception e) {
-            log.error("Failed to store chunks in Chroma: {}", e.getMessage());
-            this.collectionId = null;
-            this.baseCollectionUrl = null;
-            throw new RuntimeException("Chroma storage failed", e);
+
+        for (int startIdx = 0; startIdx < chunks.size(); startIdx += batchSize) {
+            int endIdx = Math.min(startIdx + batchSize, chunks.size());
+            List<String> chunkBatch = chunks.subList(startIdx, endIdx);
+
+            // Generate embeddings in batch via Gemini batchEmbedContents API
+            List<List<Double>> batchEmbeddings = embeddingService.embedTexts(chunkBatch);
+            
+            List<String> ids = new ArrayList<>();
+            List<Map<String, Object>> metadatas = new ArrayList<>();
+
+            for (int i = 0; i < chunkBatch.size(); i++) {
+                int globalIndex = startIdx + i;
+                ids.add("doc_" + documentId + "_chunk_" + globalIndex);
+                metadatas.add(Map.of("documentId", documentId, "fileName", fileName, "chunkIndex", globalIndex));
+            }
+
+            Map<String, Object> body = Map.of(
+                "ids", ids,
+                "embeddings", batchEmbeddings,
+                "metadatas", metadatas,
+                "documents", chunkBatch
+            );
+
+            HttpEntity<Map<String, Object>> request = new HttpEntity<>(body, headers);
+            try {
+                restTemplate.postForObject(url, request, Map.class);
+                log.info("Stored chunk batch [{} to {}] of {} for doc {} in Chroma", 
+                    startIdx, endIdx, chunks.size(), documentId);
+            } catch (Exception e) {
+                log.error("Failed to store chunk batch in Chroma: {}", e.getMessage());
+                this.collectionId = null;
+                this.baseCollectionUrl = null;
+                throw new RuntimeException("Chroma storage failed: " + e.getMessage(), e);
+            }
         }
     }
 

@@ -1,4 +1,4 @@
-import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ApiService } from '../core/api';
 
@@ -8,11 +8,12 @@ import { ApiService } from '../core/api';
   imports: [CommonModule],
   templateUrl: './knowledge-base.html'
 })
-export class KnowledgeBase implements OnInit {
+export class KnowledgeBase implements OnInit, OnDestroy {
   documents: any[] = [];
   loading = true;
   uploading = false;
   error = '';
+  private pollInterval: any = null;
 
   constructor(private api: ApiService, private cdr: ChangeDetectorRef) {}
 
@@ -20,13 +21,21 @@ export class KnowledgeBase implements OnInit {
     this.loadDocuments();
   }
 
-  loadDocuments() {
-    this.loading = true;
-    this.cdr.markForCheck();
+  ngOnDestroy() {
+    this.stopPolling();
+  }
+
+  loadDocuments(silent = false) {
+    if (!silent) {
+      this.loading = true;
+      this.cdr.markForCheck();
+    }
+
     this.api.getDocuments().subscribe({
       next: (res) => {
         if (res.success) {
-          this.documents = res.data;
+          this.documents = res.data || [];
+          this.checkPollingNeeded();
         }
         this.loading = false;
         this.cdr.markForCheck();
@@ -34,9 +43,33 @@ export class KnowledgeBase implements OnInit {
       error: () => {
         this.loading = false;
         this.error = 'Failed to load documents';
+        this.stopPolling();
         this.cdr.markForCheck();
       }
     });
+  }
+
+  private checkPollingNeeded() {
+    const hasActiveProcessing = this.documents.some(
+      doc => doc.status === 'PROCESSING' || doc.status === 'UPLOADING'
+    );
+
+    if (hasActiveProcessing) {
+      if (!this.pollInterval) {
+        this.pollInterval = setInterval(() => {
+          this.loadDocuments(true);
+        }, 3000);
+      }
+    } else {
+      this.stopPolling();
+    }
+  }
+
+  private stopPolling() {
+    if (this.pollInterval) {
+      clearInterval(this.pollInterval);
+      this.pollInterval = null;
+    }
   }
 
   onFileSelected(event: any) {
@@ -45,19 +78,20 @@ export class KnowledgeBase implements OnInit {
       this.uploading = true;
       this.error = '';
       this.cdr.markForCheck();
+      
       this.api.uploadDocument(file).subscribe({
         next: (res) => {
           if (res.success) {
-            this.loadDocuments();
+            this.loadDocuments(true);
           } else {
             this.error = res.message || 'Upload failed';
           }
           this.uploading = false;
-          event.target.value = ''; // Reset file input
+          event.target.value = '';
           this.cdr.markForCheck();
         },
-        error: () => {
-          this.error = 'Failed to upload document';
+        error: (err) => {
+          this.error = err.error?.message || 'Failed to upload document. Please check file size and format.';
           this.uploading = false;
           event.target.value = '';
           this.cdr.markForCheck();

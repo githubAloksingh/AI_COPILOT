@@ -1,10 +1,10 @@
 <div class="page-header">
   <h1>Knowledge Base</h1>
-  <p>Upload project documents (PRDs, tech specs, API docs) to feed the AI's RAG context.</p>
+  <p>Upload project documents (PRDs, tech specs, API docs, large CSVs) to feed the AI's RAG context.</p>
 </div>
 
 <div class="card">
-  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 12px;">
     <h2 style="margin: 0; font-size: 1.25rem;">Uploaded Documents</h2>
     
     <div>
@@ -15,16 +15,16 @@
     </div>
   </div>
   
-  <div *ngIf="error" class="error-message">
+  <div *ngIf="error" class="error-message" style="margin-bottom: 16px;">
     {{ error }}
   </div>
 
-  <div *ngIf="loading" class="loading-indicator">
+  <div *ngIf="loading && documents.length === 0" class="loading-indicator">
     <div class="spinner"></div>
     <span>Loading documents...</span>
   </div>
 
-  <div class="table-container" *ngIf="!loading">
+  <div class="table-container" *ngIf="!loading || documents.length > 0">
     <table *ngIf="documents.length > 0; else noDocs">
       <thead>
         <tr>
@@ -43,11 +43,22 @@
           <td>{{ doc.fileType }}</td>
           <td>{{ formatBytes(doc.fileSize) }}</td>
           <td>
-            <span [ngStyle]="{
-              'color': doc.status === 'COMPLETED' ? '#10b981' : (doc.status === 'FAILED' ? '#ef4444' : '#f59e0b'),
-              'font-weight': '600',
-              'font-size': '0.875rem'
-            }">{{ doc.status }}</span>
+            <div style="display: inline-flex; align-items: center; gap: 6px;">
+              <span *ngIf="doc.status === 'PROCESSING' || doc.status === 'UPLOADING'" 
+                    class="spinner" 
+                    style="width: 12px; height: 12px; border-width: 2px; margin: 0;"></span>
+              <span [ngStyle]="{
+                'color': doc.status === 'COMPLETED' ? '#10b981' : (doc.status === 'FAILED' ? '#ef4444' : '#f59e0b'),
+                'font-weight': '600',
+                'font-size': '0.875rem'
+              }">
+                {{ doc.status }}
+              </span>
+            </div>
+            <div *ngIf="doc.status === 'FAILED' && doc.errorMessage" 
+                 style="font-size: 0.75rem; color: #ef4444; max-width: 250px; margin-top: 4px; word-break: break-word;">
+              {{ doc.errorMessage }}
+            </div>
           </td>
           <td>
             <button class="btn btn-outline" style="padding: 6px 12px; font-size: 0.85rem;" (click)="deleteDocument(doc.id)">Delete</button>

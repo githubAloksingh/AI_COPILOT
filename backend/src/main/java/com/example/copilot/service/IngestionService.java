@@ -11,6 +11,7 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.util.List;
 
@@ -29,27 +30,40 @@ public class IngestionService {
         doc.setFileName(file.getOriginalFilename());
         doc.setFileType(file.getContentType() != null ? file.getContentType() : "unknown");
         doc.setFileSize(file.getSize());
-        doc.setStatus("UPLOADING");
-        
+        doc.setStatus("PROCESSING");
         return documentRepository.save(doc);
     }
 
-    // Spring Async would be ideal here if @EnableAsync is on, but we can call it synchronously 
-    // or just rely on a separate thread. For simplicity, we will just process synchronously, 
-    // as it allows the user to see exactly when it's done, unless it's huge. 
-    // The prompt says "Documents are processed: Extract, Clean, Chunk, Embed, Store".
-    public void processDocument(Document document, InputStream inputStream, String fileType) {
-        document.setStatus("PROCESSING");
-        documentRepository.save(document);
+    @Async("documentTaskExecutor")
+    public void processDocumentAsync(Long documentId, byte[] fileBytes, String originalFileName, String fileType) {
+        log.info("Starting async processing for document ID: {} ({})", documentId, originalFileName);
+        
+        Document document = documentRepository.findById(documentId).orElse(null);
+        if (document == null) {
+            log.error("Document with ID {} not found for processing", documentId);
+            return;
+        }
 
         try {
-            DocumentParser parser = parsers.stream()
-                    .filter(p -> p.supports(fileType))
-                    .findFirst()
-                    .orElseThrow(() -> new RuntimeException("No suitable parser found for file type: " + fileType));
+            // Determine effective file type
+            String effectiveType = fileType;
+            if (effectiveType == null || effectiveType.isBlank() || effectiveType.equals("unknown")) {
+                if (originalFileName != null && originalFileName.contains(".")) {
+                    effectiveType = originalFileName.substring(originalFileName.lastIndexOf(".") + 1).toLowerCase();
+                }
+            }
 
-            String text = parser.parse(inputStream);
-            
+            final String typeToMatch = effectiveType;
+            DocumentParser parser = parsers.stream()
+                    .filter(p -> p.supports(typeToMatch))
+                    .findFirst()
+                    .orElseThrow(() -> new RuntimeException("No suitable parser found for file type: " + typeToMatch));
+
+            String text;
+            try (InputStream is = new ByteArrayInputStream(fileBytes)) {
+                text = parser.parse(is);
+            }
+
             if (text == null || text.trim().isEmpty()) {
                 document.setStatus("FAILED");
                 document.setErrorMessage("Document contains no usable text.");
@@ -57,11 +71,7 @@ public class IngestionService {
                 return;
             }
 
-            // Clean text (basic whitespace cleaning)
-            String cleanedText = text.replaceAll("\\s+", " ").trim();
-
-            List<String> chunks = chunkingService.chunkText(cleanedText);
-            
+            List<String> chunks = chunkingService.chunkText(text);
             if (chunks.isEmpty()) {
                 document.setStatus("FAILED");
                 document.setErrorMessage("Document parsing yielded no chunks.");
@@ -69,16 +79,22 @@ public class IngestionService {
                 return;
             }
 
+            log.info("Generated {} chunks for doc ID: {}. Storing in vector DB...", chunks.size(), documentId);
             retrievalService.storeChunks(document.getId(), document.getFileName(), chunks);
 
             document.setStatus("COMPLETED");
+            document.setErrorMessage(null);
             documentRepository.save(document);
-            log.info("Successfully processed document ID: {}", document.getId());
+            log.info("Successfully completed ingestion for document ID: {}", document.getId());
 
         } catch (Exception e) {
-            log.error("Failed to process document {}: {}", document.getId(), e.getMessage());
+            log.error("Failed to process document ID {}: {}", documentId, e.getMessage(), e);
             document.setStatus("FAILED");
-            document.setErrorMessage(e.getMessage());
+            String err = e.getMessage() != null ? e.getMessage() : "Unknown error during ingestion";
+            if (err.length() > 500) {
+                err = err.substring(0, 500) + "...";
+            }
+            document.setErrorMessage(err);
             documentRepository.save(document);
         }
     }
